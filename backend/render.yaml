@@ -1,0 +1,39 @@
+# Blueprint for botszam API on Render.
+#
+# Dashboard settings if not using this file:
+#   Root Directory:  backend
+#   Build Command:   npm install && npm run build
+#   Start Command:   npm start
+
+services:
+  - type: web
+    name: botszam-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: FRONTEND_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: ORDER_PREFIX
+        value: BTZ
