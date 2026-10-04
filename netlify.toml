@@ -1,10 +1,10 @@
 # Netlify — deploy from monorepo root
-# Prefer this when Base directory is left empty in the Netlify UI.
-# Env vars still go on the Netlify site: VITE_API_URL, VITE_SITE_URL
+# Use when Base directory is left empty in the Netlify UI.
+# Env vars: VITE_API_URL, VITE_SITE_URL
 
 [build]
   base = "frontend"
-  command = "npm ci && npm run build"
+  command = "npm run build"
   publish = "dist"
 
 [build.environment]

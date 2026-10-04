@@ -1,20 +1,22 @@
 # Netlify — botszam storefront
 #
-# In Netlify UI either:
-#   A) Base directory = `frontend`  → this file is used as-is
-#   B) Base directory empty (repo root) → use the root `/netlify.toml` instead
+# Recommended Netlify UI settings (Site configuration → Build & deploy):
+#   Base directory:     frontend
+#   Package directory:  (leave empty)
+#   Build command:      npm run build
+#   Publish directory:  dist          ← NOT frontend/dist (base already = frontend)
+#   Functions directory: (leave empty)
 #
 # Required env vars (Site settings → Environment variables):
 #   VITE_API_URL  = https://YOUR-API.onrender.com/api
 #   VITE_SITE_URL = https://YOUR-SITE.netlify.app   (optional, for SEO/OG)
 
 [build]
-  command = "npm ci && npm run build"
+  command = "npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_FLAGS = "--legacy-peer-deps"
 
 # SPA fallback — React Router client routes must serve index.html
 [[redirects]]
