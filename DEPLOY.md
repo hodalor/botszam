@@ -24,7 +24,7 @@ Cross-site cookies need HTTPS on both sides. In production the API always sets t
 1. Push this repo to GitHub/GitLab.
 2. In Render: **New → Blueprint** → select the repo. It reads `render.yaml` (`rootDir: backend`).
 3. Fill in the `sync: false` env vars when prompted (see table below).
-4. Deploy. Note the public URL, e.g. `https://botszam-api.onrender.com`.
+4. Deploy. Note the public URL, e.g. `https://botszam.onrender.com`.
 
 ### Option B — Manual Web Service
 
@@ -107,7 +107,7 @@ The `[[redirects]]` rule rewrites all paths to `index.html` for React Router (SP
 
 | Variable | Required | Example |
 | --- | --- | --- |
-| `VITE_API_URL` | yes | `https://botszam-api.onrender.com/api` |
+| `VITE_API_URL` | yes | `https://botszam.onrender.com/api` |
 | `VITE_SITE_URL` | recommended | `https://botszam.netlify.app` (canonical / Open Graph) |
 
 4. Deploy. Copy the Netlify URL.

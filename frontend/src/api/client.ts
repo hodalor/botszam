@@ -1,6 +1,16 @@
 import axios, { AxiosError } from 'axios'
 
-export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api').replace(/\/+$/, '')
+const rawApiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api').replace(/\/+$/, '')
+
+// Vite bakes VITE_* at build time. A Netlify deploy without VITE_API_URL would
+// ship pointing at localhost — fail the production build instead.
+if (import.meta.env.PROD && /localhost|127\.0\.0\.1/.test(rawApiUrl)) {
+  throw new Error(
+    'VITE_API_URL must be your live API (e.g. https://YOUR-SERVICE.onrender.com/api). Set it in Netlify → Environment variables, then redeploy.',
+  )
+}
+
+export const API_URL = rawApiUrl
 
 /** Single axios instance. Auth is an httpOnly cookie set by the API, so credentials must be sent. */
 export const api = axios.create({

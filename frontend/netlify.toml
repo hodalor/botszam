@@ -7,9 +7,12 @@
 #   Publish directory:  dist          ← NOT frontend/dist (base already = frontend)
 #   Functions directory: (leave empty)
 #
-# Required env vars (Site settings → Environment variables):
-#   VITE_API_URL  = https://YOUR-API.onrender.com/api
-#   VITE_SITE_URL = https://YOUR-SITE.netlify.app   (optional, for SEO/OG)
+# REQUIRED env vars (Site configuration → Environment variables) — then Clear
+# cache and deploy site. Vite bakes these in at build time:
+#   VITE_API_URL  = https://YOUR-SERVICE.onrender.com/api
+#   VITE_SITE_URL = https://botszam.netlify.app
+#
+# Also set on Render: FRONTEND_URL = https://botszam.netlify.app  (CORS)
 
 [build]
   command = "npm run build"
