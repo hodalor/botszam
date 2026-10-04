@@ -19,7 +19,7 @@ import { ProductRow } from '@/components/product/ProductCard'
 import { Reveal } from '@/components/Reveal'
 import { ButtonLink, ErrorState } from '@/components/ui'
 import { BRAND_NAME } from '@/lib/constants'
-import { PHOTOS, unsplash } from '@/lib/imagery'
+import { categoryImage, PHOTOS, unsplash } from '@/lib/imagery'
 import { PageMeta } from '@/components/seo/PageMeta'
 import { useWhatsAppLink } from '@/lib/useWhatsAppLink'
 
@@ -156,7 +156,6 @@ function SectionHeading({
 
 function CategoryGrid() {
   const { data: categories = [] } = useCategories()
-  const fallbackPhotos = [PHOTOS.hangingTowels, PHOTOS.rolledHandTowels, PHOTOS.beachTowel, PHOTOS.foldedStack, PHOTOS.stackOnRack]
 
   return (
     <section aria-labelledby="collections" className="container-page pt-20 md:pt-32">
@@ -168,12 +167,12 @@ function CategoryGrid() {
       />
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 md:gap-4">
         {categories.map((cat, i) => {
-          const photo = cat.imageUrl || unsplash(fallbackPhotos[i % fallbackPhotos.length]!, 800, 1066)
+          const photo = categoryImage(cat.slug, cat.imageUrl, i)
           return (
             <Reveal as="li" key={cat.slug} delay={i * 0.08}>
               <Link
                 to={`/shop/${cat.slug}`}
-                className="group relative block aspect-[3/4] overflow-hidden rounded-md bg-rose-soft ring-1 ring-coral/15"
+                className="group relative block aspect-[3/4] overflow-hidden rounded-xl bg-rose-soft shadow-sm ring-1 ring-coral/20"
               >
                 <img
                   src={photo}
@@ -186,18 +185,18 @@ function CategoryGrid() {
                 />
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-coral/20 to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-magenta/80 via-coral/25 to-transparent"
                 />
                 <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 md:p-5">
                   <span>
-                    <span className="block font-display text-xl text-linen md:text-[1.5rem]">
+                    <span className="block font-display text-xl text-white md:text-[1.5rem]">
                       {cat.name}
                     </span>
-                    <span className="mt-1 hidden text-sm text-linen/80 md:block line-clamp-2">{cat.description}</span>
+                    <span className="mt-1 hidden text-sm text-white/85 md:block line-clamp-2">{cat.description}</span>
                   </span>
                   <span
                     aria-hidden="true"
-                    className="hidden size-10 shrink-0 items-center justify-center rounded-full border border-linen/40 text-linen transition-colors duration-300 group-hover:bg-linen group-hover:text-charcoal md:flex"
+                    className="hidden size-10 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/15 text-white backdrop-blur-sm transition-colors duration-300 group-hover:bg-white group-hover:text-magenta md:flex"
                   >
                     <ArrowUpRight className="size-4" />
                   </span>

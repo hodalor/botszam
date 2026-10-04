@@ -13,3 +13,22 @@ export const PHOTOS = {
   rolledHandTowels: '1648042497232-25de1ed8aaf2',
   beachTowel: '1686125429003-f552c9f16504',
 } as const
+
+/**
+ * High-res category tiles (served from /public/categories).
+ * Prefer these over API catalog snaps, which are too small for large cards.
+ */
+export const CATEGORY_IMAGES: Record<string, string> = {
+  swimming: '/categories/swimming.jpg',
+  'home-use': '/categories/home-use.jpg',
+  'hotel-use': '/categories/hotel-use.jpg',
+  'hotel-home': '/categories/hotel-home.jpg',
+  'saloon-use': '/categories/saloon-use.jpg',
+}
+
+export function categoryImage(slug: string, fallbackUrl?: string | null, index = 0) {
+  if (CATEGORY_IMAGES[slug]) return CATEGORY_IMAGES[slug]!
+  if (fallbackUrl) return fallbackUrl
+  const keys = Object.values(PHOTOS)
+  return unsplash(keys[index % keys.length]!, 800, 1066)
+}
