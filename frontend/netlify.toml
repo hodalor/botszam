@@ -1,0 +1,36 @@
+# Netlify — botszam storefront
+#
+# In Netlify UI either:
+#   A) Base directory = `frontend`  → this file is used as-is
+#   B) Base directory empty (repo root) → use the root `/netlify.toml` instead
+#
+# Required env vars (Site settings → Environment variables):
+#   VITE_API_URL  = https://YOUR-API.onrender.com/api
+#   VITE_SITE_URL = https://YOUR-SITE.netlify.app   (optional, for SEO/OG)
+
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# SPA fallback — React Router client routes must serve index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security / caching headers for the static app shell
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

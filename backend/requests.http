@@ -1,0 +1,321 @@
+# botszam API - REST Client (VS Code / Cursor "REST Client" extension) or JetBrains HTTP client.
+# Run `npm run seed` first. Requests that need ids/tokens reuse values captured from earlier responses,
+# so run them top to bottom.
+#
+# For an automated end-to-end run of the same flow: `npm run smoke` (with the API running).
+
+@baseUrl = http://localhost:4000/api
+@adminEmail = admin@botszam.com
+@adminPassword = change-me-strong-password
+@customerPhone = 0971234567
+@guestPhone = 0761234567
+
+### Health
+GET {{baseUrl}}/health
+
+### ---------------------------------------------------------------- Catalogue
+
+### List products (filters: category, colour, size, minPrice, maxPrice in ngwee, search, sort, page, limit)
+# @name products
+GET {{baseUrl}}/products?sort=price_asc&page=1&limit=12
+
+### Filtered
+GET {{baseUrl}}/products?category=bath&colour=Cloud White&maxPrice=30000&sort=price_desc
+
+### Search
+GET {{baseUrl}}/products?search=robe
+
+### Featured
+GET {{baseUrl}}/products/featured
+
+### Filter options (colours, sizes, price range) for the whole catalogue or one category
+GET {{baseUrl}}/products/facets?category=bath
+
+### Product by slug
+GET {{baseUrl}}/products/{{products.response.body.items[0].slug}}
+
+### Delivery zones
+# @name zones
+GET {{baseUrl}}/delivery-zones
+
+### Public settings (store info + mobile money accounts)
+GET {{baseUrl}}/settings/public
+
+### ---------------------------------------------------------------- Auth
+
+### Register a customer
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Chanda Mwila",
+  "email": "chanda@example.com",
+  "phone": "{{customerPhone}}",
+  "password": "Sup3rSecret!"
+}
+
+### Login (email or phone in any supported format)
+# @name customerLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "+260971234567",
+  "password": "Sup3rSecret!"
+}
+
+### Current user
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{customerLogin.response.body.token}}
+
+### Update profile + saved address
+PATCH {{baseUrl}}/auth/me
+Authorization: Bearer {{customerLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "name": "Chanda M. Mwila",
+  "addresses": [
+    { "label": "Home", "zone": "{{zones.response.body.items[0].id}}", "area": "Kabulonga", "street": "12 Lukasu Road", "landmark": "Opposite the clinic", "isDefault": true }
+  ]
+}
+
+### Admin login
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Logout (clears the cookie)
+POST {{baseUrl}}/auth/logout
+
+### ---------------------------------------------------------------- Orders
+
+### Place a mobile money order as a guest. Any prices/totals sent are ignored by the server.
+# @name order
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "{{products.response.body.items[0].id}}",
+      "variantSku": "{{products.response.body.items[0].variants[0].sku}}",
+      "quantity": 2
+    }
+  ],
+  "customer": { "name": "Guest Buyer", "phone": "{{guestPhone}}" },
+  "deliveryAddress": {
+    "zoneId": "{{zones.response.body.items[0].id}}",
+    "area": "Woodlands",
+    "street": "5 Chindo Road",
+    "landmark": "Near the market",
+    "notes": "Call on arrival"
+  },
+  "paymentMethod": "mobile_money"
+}
+
+### Track (guest)
+GET {{baseUrl}}/orders/track?orderNumber={{order.response.body.order.orderNumber}}&phone={{guestPhone}}
+
+### Submit payment proof
+POST {{baseUrl}}/orders/{{order.response.body.order.orderNumber}}/payment-proof
+Content-Type: application/json
+
+{
+  "phone": "{{guestPhone}}",
+  "network": "MTN",
+  "payerPhone": "0961234567",
+  "transactionRef": "MP261004.1234.A56789"
+}
+
+### Place a pay-on-delivery order while logged in
+# @name podOrder
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": "{{products.response.body.items[1].id}}", "variantSku": "{{products.response.body.items[1].variants[0].sku}}", "quantity": 1 }
+  ],
+  "customer": { "name": "Chanda Mwila", "phone": "{{customerPhone}}" },
+  "deliveryAddress": { "zoneId": "{{zones.response.body.items[0].id}}", "area": "Kabulonga", "street": "12 Lukasu Road" },
+  "paymentMethod": "pay_on_delivery"
+}
+
+### My orders
+GET {{baseUrl}}/orders/mine
+Authorization: Bearer {{customerLogin.response.body.token}}
+
+### Cancel (owner via token, or guest via { "phone": "..." })
+POST {{baseUrl}}/orders/{{podOrder.response.body.order.orderNumber}}/cancel
+Authorization: Bearer {{customerLogin.response.body.token}}
+Content-Type: application/json
+
+{}
+
+### ---------------------------------------------------------------- Admin: orders
+
+### Dashboard stats
+GET {{baseUrl}}/admin/stats
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### List orders (status, paymentMethod, from/to as YYYY-MM-DD, search by order number / phone / name)
+GET {{baseUrl}}/admin/orders?status=payment_submitted&search={{guestPhone}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Get one
+GET {{baseUrl}}/admin/orders/{{order.response.body.order.orderNumber}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Verify payment
+POST {{baseUrl}}/admin/orders/{{order.response.body.order.orderNumber}}/verify-payment
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{ "note": "Matched on MTN statement" }
+
+### Reject payment (restores stock)
+POST {{baseUrl}}/admin/orders/{{order.response.body.order.orderNumber}}/reject-payment
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{ "reason": "No matching transaction found" }
+
+### Update status (confirmed | processing | out_for_delivery | delivered | cancelled)
+PATCH {{baseUrl}}/admin/orders/{{order.response.body.order.orderNumber}}/status
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{ "status": "processing", "note": "Packed" }
+
+### ---------------------------------------------------------------- Admin: products
+
+### List (search, category, active, featured)
+GET {{baseUrl}}/admin/products?active=true
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Create
+# @name newProduct
+POST {{baseUrl}}/admin/products
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "name": "Maun Guest Towel",
+  "description": "A small, soft guest towel.",
+  "category": "hand",
+  "featured": false,
+  "variants": [
+    { "sku": "BTZ-MAUN-3050-WHI", "size": "30 x 50 cm", "colour": "Cloud White", "colourHex": "#F5F2EC", "priceNgwee": 8500, "stock": 20, "lowStockThreshold": 5 }
+  ]
+}
+
+### Update (stock of existing variants is ignored here; use inventory adjust)
+PATCH {{baseUrl}}/admin/products/{{newProduct.response.body.product._id}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "description": "A small, soft guest towel with a dobby border.",
+  "variants": [
+    { "sku": "BTZ-MAUN-3050-WHI", "size": "30 x 50 cm", "colour": "Cloud White", "colourHex": "#F5F2EC", "priceNgwee": 9000, "lowStockThreshold": 5 },
+    { "sku": "BTZ-MAUN-3050-SAN", "size": "30 x 50 cm", "colour": "Kalahari Sand", "colourHex": "#D8C7AE", "priceNgwee": 9000, "stock": 10, "lowStockThreshold": 5 }
+  ]
+}
+
+### Toggle active / featured
+POST {{baseUrl}}/admin/products/{{newProduct.response.body.product._id}}/toggle-featured
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Upload images (multipart, field "images", jpg/png/webp, max 5MB each)
+POST {{baseUrl}}/admin/products/{{newProduct.response.body.product._id}}/images
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: multipart/form-data; boundary=Boundary
+
+--Boundary
+Content-Disposition: form-data; name="images"; filename="towel.jpg"
+Content-Type: image/jpeg
+
+< ./towel.jpg
+--Boundary--
+
+### Delete (refused if the product appears in orders)
+DELETE {{baseUrl}}/admin/products/{{newProduct.response.body.product._id}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### ---------------------------------------------------------------- Admin: inventory
+
+### Low stock
+GET {{baseUrl}}/admin/inventory/low-stock
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Adjust (reason: restock | adjustment)
+POST {{baseUrl}}/admin/inventory/adjust
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "productId": "{{products.response.body.items[0].id}}",
+  "variantSku": "{{products.response.body.items[0].variants[0].sku}}",
+  "change": 12,
+  "reason": "restock",
+  "note": "Shipment from Gaborone"
+}
+
+### Logs (productId, variantSku, reason, orderNumber, from, to)
+GET {{baseUrl}}/admin/inventory/logs?reason=restock&limit=20
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### ---------------------------------------------------------------- Admin: delivery zones & settings
+
+### List zones
+GET {{baseUrl}}/admin/delivery-zones
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Create zone
+# @name newZone
+POST {{baseUrl}}/admin/delivery-zones
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{ "name": "Chilanga", "feeNgwee": 12000, "estimatedDays": "1-2 days" }
+
+### Update zone
+PATCH {{baseUrl}}/admin/delivery-zones/{{newZone.response.body.zone._id}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{ "feeNgwee": 11000 }
+
+### Delete zone (refused if it has orders)
+DELETE {{baseUrl}}/admin/delivery-zones/{{newZone.response.body.zone._id}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Get settings
+GET {{baseUrl}}/admin/settings
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### Replace settings
+PUT {{baseUrl}}/admin/settings
+Authorization: Bearer {{adminLogin.response.body.token}}
+Content-Type: application/json
+
+{
+  "storeName": "botszam",
+  "contactPhone": "0970000000",
+  "whatsappNumber": "0970000000",
+  "email": "hello@botszam.com",
+  "mobileMoneyAccounts": [
+    { "network": "MTN", "number": "0960000000", "accountName": "BOTSZAM LIMITED" },
+    { "network": "Airtel", "number": "0970000000", "accountName": "BOTSZAM LIMITED" },
+    { "network": "Zamtel", "number": "0950000000", "accountName": "BOTSZAM LIMITED" }
+  ],
+  "paymentInstructions": "Send the exact order total and use your order number as the reference."
+}

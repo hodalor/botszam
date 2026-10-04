@@ -1,0 +1,47 @@
+# Render Blueprint — botszam API
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Create the service from this file (New → Blueprint) or copy the build/start
+# commands into a Web Service with Root Directory = backend.
+
+services:
+  - type: web
+    name: botszam-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: FRONTEND_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: ORDER_PREFIX
+        value: BTZ
+      # Only needed when you run `npm run seed:prod` once in the Render shell
+      - key: ADMIN_NAME
+        value: Botszam Admin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PHONE
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
